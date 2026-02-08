@@ -1,0 +1,34 @@
+FROM ubuntu:22.04
+
+# Install Java 21
+RUN apt update -y && \
+    apt install -y openjdk-21-jdk && \
+    java -version
+
+# Install Maven
+RUN apt install -y maven && \
+    mvn -version
+
+# Install wget
+RUN apt install -y wget
+
+# Download Tomcat
+RUN wget https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.8/bin/apache-tomcat-9.0.8.tar.gz
+
+# Create tomcat directory and extract correctly
+RUN mkdir -p /opt/tomcat && \
+    tar -xzf apache-tomcat-9.0.8.tar.gz -C /opt/tomcat && \
+    rm apache-tomcat-9.0.8.tar.gz
+
+# Create tomcat user
+RUN groupadd tomcat && \
+    useradd -s /bin/false -g tomcat -d /opt/tomcat tomcat
+
+# Fix permissions (NO cd, NO 777)
+RUN chown -R tomcat:tomcat /opt/tomcat/apache-tomcat-9.0.8 && \
+    chmod +x /opt/tomcat/apache-tomcat-9.0.8/bin/*.sh
+
+EXPOSE 8080
+
+# Keep container running
+ENTRYPOINT ["/opt/tomcat/apache-tomcat-9.0.8/bin/catalina.sh", "run"]
